@@ -315,12 +315,12 @@ def create_contact(request):
         )
 
     except Exception as e:
+        print("Email sending failed:", repr(e))
 
-        print("Email sending failed:", str(e))
-
-        return Response(
-            {
-                "message": "Contact enquiry received, but email sending failed"
-            },
-            status=status.HTTP_201_CREATED
-        )
+    return Response(
+        {
+            "message": "Contact enquiry received, but email sending failed",
+            "email_error": str(e)
+        },
+        status=status.HTTP_201_CREATED
+    )
