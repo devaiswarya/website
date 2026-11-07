@@ -196,6 +196,7 @@ from datetime import datetime, timezone
 from django.conf import settings
 from project.mongodb import contact_collection
 from utils.email_service import send_contact_email
+from .serializer import ContactSerializer
 
 # Import your existing serializer and MongoDB collection
 # from .serializers import ContactSerializer
