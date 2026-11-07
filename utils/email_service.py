@@ -20,23 +20,52 @@
 #         "email_id": response["id"]
 #     }
 
+# import resend
+# from django.conf import settings
+
+# def send_contact_email(email, name, message):
+
+#     resend.api_key = settings.RESEND_API_KEY
+
+#     params = {
+#         "from": "ALO Website <onboarding@resend.dev>",
+#         "to": ["your-email@gmail.com"],
+#         "subject": "New Contact Form Submission",
+#         "html": f"""
+#             <h2>New Contact</h2>
+#             <p>Name: {name}</p>
+#             <p>Email: {email}</p>
+#             <p>Message: {message}</p>
+#         """
+#     }
+
+#     return resend.Emails.send(params)
+
+
 import resend
 from django.conf import settings
 
-def send_contact_email(email, name, message):
+
+def send_contact_email(name, email, phone, subject, message):
 
     resend.api_key = settings.RESEND_API_KEY
 
     params = {
         "from": "ALO Website <onboarding@resend.dev>",
         "to": ["your-email@gmail.com"],
-        "subject": "New Contact Form Submission",
+        "subject": subject,
+
         "html": f"""
-            <h2>New Contact</h2>
-            <p>Name: {name}</p>
-            <p>Email: {email}</p>
-            <p>Message: {message}</p>
+            <h2>New Contact Form Enquiry</h2>
+
+            <p><b>Name:</b> {name}</p>
+            <p><b>Email:</b> {email}</p>
+            <p><b>Phone:</b> {phone}</p>
+            <p><b>Subject:</b> {subject}</p>
+            <p><b>Message:</b> {message}</p>
         """
     }
 
-    return resend.Emails.send(params)
+    response = resend.Emails.send(params)
+
+    return response
