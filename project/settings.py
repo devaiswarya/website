@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,6 +34,8 @@ ALLOWED_HOSTS = [
     ".devtunnels.ms",
     "website-rlht.onrender.com",
 ]
+
+load_dotenv(BASE_DIR / ".env")
 
 
 # Application definition
@@ -158,13 +162,14 @@ STATIC_URL = 'static/'
 # EMAIL_TIMEOUT = 15
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'joshibaaloschool@gmail.com'
-EMAIL_HOST_PASSWORD = 'pbsr iwhi pvza wsgq'
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_USE_SSL = False
-EMAIL_TIMEOUT = 15
+
+
+# Resend Email Configuration
+
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+
+DEFAULT_FROM_EMAIL = "onboarding@resend.dev"
+
+CONTACT_RECEIVER_EMAIL = os.environ.get(
+    "CONTACT_RECEIVER_EMAIL"
+)
