@@ -9,7 +9,7 @@
 
 from rest_framework import serializers
 
-from .db import contacts_collection
+from project.mongodb import contact_collection
 
 
 class ContactSerializer(serializers.Serializer):
@@ -21,7 +21,7 @@ class ContactSerializer(serializers.Serializer):
 
     def create(self, validated_data):
 
-        result = contacts_collection.insert_one(validated_data)
+        result = contact_collection.insert_one(validated_data)
 
         validated_data["_id"] = str(result.inserted_id)
 

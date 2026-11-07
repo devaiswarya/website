@@ -277,6 +277,7 @@ from rest_framework import status
 import resend
 import os
 from .serializer import ContactSerializer
+from project.mongodb import contact_collection
 from utils.email_service import send_contact_email
 
 
