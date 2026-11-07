@@ -274,10 +274,57 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
+import resend
+import os
 from .serializer import ContactSerializer
 from utils.email_service import send_contact_email
 
+
+# @api_view(["POST"])
+# def create_contact(request):
+
+#     serializer = ContactSerializer(data=request.data)
+
+#     if not serializer.is_valid():
+
+#         return Response(
+#             {
+#                 "message": "Validation failed",
+#                 "errors": serializer.errors
+#             },
+#             status=status.HTTP_400_BAD_REQUEST
+#         )
+
+#     data = serializer.validated_data
+
+#     try:
+
+#         email_response = send_contact_email(
+#             name=data["name"],
+#             email=data["email"],
+#             phone=data["phone"],
+#             subject=data["subject"],
+#             message=data["message"]
+#         )
+
+#         return Response(
+#             {
+#                 "message": "Contact enquiry submitted and email sent successfully",
+#                 "email_response": str(email_response)
+#             },
+#             status=status.HTTP_201_CREATED
+#         )
+
+#     except Exception as e:
+#         print("Email sending failed:", repr(e))
+
+#     return Response(
+#         {
+#             "message": "Contact enquiry received, but email sending failed",
+#             "email_error": str(e)
+#         },
+#         status=status.HTTP_201_CREATED
+#     )
 
 @api_view(["POST"])
 def create_contact(request):
@@ -285,42 +332,48 @@ def create_contact(request):
     serializer = ContactSerializer(data=request.data)
 
     if not serializer.is_valid():
-
         return Response(
             {
                 "message": "Validation failed",
                 "errors": serializer.errors
             },
-            status=status.HTTP_400_BAD_REQUEST
+            status=400
         )
 
-    data = serializer.validated_data
+    contact = serializer.save()
+
+    email_error = None
 
     try:
-
-        email_response = send_contact_email(
-            name=data["name"],
-            email=data["email"],
-            phone=data["phone"],
-            subject=data["subject"],
-            message=data["message"]
-        )
-
-        return Response(
-            {
-                "message": "Contact enquiry submitted and email sent successfully",
-                "email_response": str(email_response)
-            },
-            status=status.HTTP_201_CREATED
-        )
+        resend.Emails.send({
+            "from": "Your Name <onboarding@resend.dev>",
+            "to": ["your-email@gmail.com"],
+            "subject": "New Contact Enquiry",
+            "html": f"""
+                <h2>New Contact Enquiry</h2>
+                <p>Name: {contact.name}</p>
+                <p>Email: {contact.email}</p>
+            """
+        })
 
     except Exception as e:
-        print("Email sending failed:", repr(e))
+        email_error = str(e)
+        print("Email sending failed:", email_error)
+
+    if email_error:
+        return Response(
+            {
+                "message": "Contact details saved, but email sending failed",
+                "contact_id": str(contact.id),
+                "email_error": email_error
+            },
+            status=201
+        )
 
     return Response(
         {
-            "message": "Contact enquiry received, but email sending failed",
-            "email_error": str(e)
+            "message": "Contact created and email sent successfully",
+            "contact_id": str(contact.id)
         },
-        status=status.HTTP_201_CREATED
+        status=201
     )
