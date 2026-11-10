@@ -1,22 +1,22 @@
 from django.urls import path
-from . import views
+from .views import create_deal, get_today_deals, update_deal
 
 urlpatterns = [
 
     path(
         "deals/create/",
-        views.create_deal,
+        create_deal,
         name="create_deal"
     ),
     path(
         "deals/today/",
-        views.get_today_deals,
+        get_today_deals,
         name="get_today_deals"
     ),
 
     path(
         "deals/update/<str:deal_id>/",
-        views.update_deal,
+        update_deal,
         name="update_deal"
     ),
 ]
