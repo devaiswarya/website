@@ -166,10 +166,20 @@ STATIC_URL = 'static/'
 
 # Resend Email Configuration
 
+# RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+
+# DEFAULT_FROM_EMAIL = "onboarding@resend.dev"
+
+# CONTACT_RECEIVER_EMAIL = os.environ.get(
+#     "CONTACT_RECEIVER_EMAIL"
+# )
+
+
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
 
 DEFAULT_FROM_EMAIL = "onboarding@resend.dev"
 
 CONTACT_RECEIVER_EMAIL = os.environ.get(
-    "CONTACT_RECEIVER_EMAIL"
+    "CONTACT_RECEIVER_EMAIL",
+    "joshibaaloschool@gmail.com"
 )

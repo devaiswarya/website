@@ -271,14 +271,7 @@
 #     )
 
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-import resend
-import os
-from .serializer import ContactSerializer
-from project.mongodb import contact_collection
-from utils.email_service import send_contact_email
+
 
 
 # @api_view(["POST"])
@@ -327,6 +320,68 @@ from utils.email_service import send_contact_email
 #         status=status.HTTP_201_CREATED
 #     )
 
+# @api_view(["POST"])
+# def create_contact(request):
+
+#     serializer = ContactSerializer(data=request.data)
+
+#     if not serializer.is_valid():
+#         return Response(
+#             {
+#                 "message": "Validation failed",
+#                 "errors": serializer.errors
+#             },
+#             status=400
+#         )
+
+#     contact = serializer.save()
+
+#     email_error = None
+
+#     try:
+#         resend.Emails.send({
+#             "from": "Your Name <onboarding@resend.dev>",
+#             "to": ["joshibaaloschool@gmail.com"],
+#             "subject": "New Contact Enquiry",
+#             "html": f"""
+#                 <h2>New Contact Enquiry</h2>
+#                 <p>Name: {contact["name"]}</p>
+#                 <p>Email: {contact["email"]}</p>
+#             """
+#         })
+
+#     except Exception as e:
+#         email_error = str(e)
+#         print("Email sending failed:", email_error)
+
+#     if email_error:
+#         return Response(
+#             {
+#                 "message": "Contact details saved, but email sending failed",
+#                 "contact_id": str(contact["_id"]),
+#                 "email_error": email_error
+#             },
+#             status=201
+#         )
+
+#     return Response(
+#         {
+#             "message": "Contact created and email sent successfully",
+#             "contact_id": str(contact["_id"])
+#         },
+#         status=201
+#     )
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+import resend
+import os
+from .serializer import ContactSerializer
+from project.mongodb import contact_collection
+from utils.email_service import send_contact_email
+
+
 @api_view(["POST"])
 def create_contact(request):
 
@@ -334,47 +389,38 @@ def create_contact(request):
 
     if not serializer.is_valid():
         return Response(
-            {
-                "message": "Validation failed",
-                "errors": serializer.errors
-            },
+            serializer.errors,
             status=400
         )
 
-    contact = serializer.save()
+    contact = serializer.validated_data
 
-    email_error = None
+    # Save contact in MongoDB
+    contact_id = contact_collection.insert_one({
+        **contact,
+        "status": "New"
+    }).inserted_id
 
     try:
-        resend.Emails.send({
-            "from": "Your Name <onboarding@resend.dev>",
-            "to": ["joshibaaloschool@gmail.com"],
-            "subject": "New Contact Enquiry",
-            "html": f"""
-                <h2>New Contact Enquiry</h2>
-                <p>Name: {contact["name"]}</p>
-                <p>Email: {contact["email"]}</p>
-            """
-        })
-
-    except Exception as e:
-        email_error = str(e)
-        print("Email sending failed:", email_error)
-
-    if email_error:
-        return Response(
-            {
-                "message": "Contact details saved, but email sending failed",
-                "contact_id": str(contact["_id"]),
-                "email_error": email_error
-            },
-            status=201
+        send_contact_email(
+            name=contact.get("name"),
+            email=contact.get("email"),
+            phone=contact.get("phone"),
+            subject=contact.get("subject"),
+            message=contact.get("message")
         )
 
-    return Response(
-        {
-            "message": "Contact created and email sent successfully",
-            "contact_id": str(contact["_id"])
-        },
-        status=201
-    )
+        return Response({
+            "message": "Contact details saved and email sent successfully",
+            "contact_id": str(contact_id)
+        }, status=201)
+
+    except Exception as e:
+
+        print("Email sending failed:", str(e))
+
+        return Response({
+            "message": "Contact details saved, but email sending failed",
+            "contact_id": str(contact_id),
+            "email_error": str(e)
+        }, status=201)

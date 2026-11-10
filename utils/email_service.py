@@ -42,18 +42,52 @@
 #     return resend.Emails.send(params)
 
 
+# import resend
+# from django.conf import settings
+
+
+# def send_contact_email(name, email, phone, subject, message):
+
+#     resend.api_key = settings.RESEND_API_KEY
+
+#     params = {
+#         "from": "ALO Website <onboarding@resend.dev>",
+#         "to": ["joshibaaloschool@gmail.com"],
+#         "subject": subject,
+
+#         "html": f"""
+#             <h2>New Contact Form Enquiry</h2>
+
+#             <p><b>Name:</b> {name}</p>
+#             <p><b>Email:</b> {email}</p>
+#             <p><b>Phone:</b> {phone}</p>
+#             <p><b>Subject:</b> {subject}</p>
+#             <p><b>Message:</b> {message}</p>
+#         """
+#     }
+
+#     response = resend.Emails.send(params)
+
+#     return response
+
+
 import resend
 from django.conf import settings
 
 
 def send_contact_email(name, email, phone, subject, message):
 
+    if not settings.RESEND_API_KEY:
+        raise ValueError("RESEND_API_KEY is missing")
+
     resend.api_key = settings.RESEND_API_KEY
 
     params = {
-        "from": "ALO Website <onboarding@resend.dev>",
-        "to": ["joshibaaloschool@gmail.com"],
-        "subject": subject,
+        "from": f"ALO Website <{settings.DEFAULT_FROM_EMAIL}>",
+
+        "to": [settings.CONTACT_RECEIVER_EMAIL],
+
+        "subject": f"New Contact Enquiry: {subject}",
 
         "html": f"""
             <h2>New Contact Form Enquiry</h2>
