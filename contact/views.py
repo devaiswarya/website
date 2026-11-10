@@ -352,8 +352,8 @@ def create_contact(request):
             "subject": "New Contact Enquiry",
             "html": f"""
                 <h2>New Contact Enquiry</h2>
-                <p>Name: {contact.name}</p>
-                <p>Email: {contact.email}</p>
+                <p>Name: {contact["name"]}</p>
+                <p>Email: {contact["email"]}</p>
             """
         })
 
