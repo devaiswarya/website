@@ -19,6 +19,7 @@ from .serializer import DealSerializer
 @api_view(["POST"])
 # @permission_classes([IsAuthenticated])
 def create_deal(request):
+
     serializer = DealSerializer(data=request.data)
 
     if not serializer.is_valid():
@@ -28,7 +29,7 @@ def create_deal(request):
 
     data = serializer.validated_data
 
-
+    # Find product
     product = products_collection.find_one({
         "product_id": data["product_id"],
         "is_deleted": {"$ne": True}
@@ -54,15 +55,29 @@ def create_deal(request):
             "message": "Original product price is invalid"
         }, status=400)
 
-    if offer_price >= original_price:
+    if offer_price <= 0 or offer_price >= original_price:
         return Response({
-            "message": "Offer price must be less than original price"
+            "message": "Offer price must be greater than zero and less than original price"
+        }, status=400)
+
+    # Validate dates
+    if data["end_date"] < data["start_date"]:
+        return Response({
+            "message": "End date must be after start date"
         }, status=400)
 
     # Calculate discount
     discount = round(
         ((original_price - offer_price) / original_price) * 100,
         2
+    )
+
+    # Image upload
+    image = data["image"]
+
+    image_path = default_storage.save(
+        f"uploads/deals/{image.name}",
+        image
     )
 
     # MongoDB document
@@ -73,6 +88,7 @@ def create_deal(request):
         "offer_price": float(offer_price),
         "discount_percentage": float(discount),
         "offer_title": data["offer_title"],
+        "image": image_path,
         "start_date": data["start_date"].isoformat(),
         "end_date": data["end_date"].isoformat(),
         "status": data["status"],
@@ -88,28 +104,47 @@ def create_deal(request):
         "product_name": deal_data["product_name"],
         "original_price": float(original_price),
         "offer_price": float(offer_price),
-        "discount_percentage": float(discount)
+        "discount_percentage": float(discount),
+        "image": image_path
     }, status=201)
-
-
 
 
 @api_view(["GET"])
 def get_today_deals(request):
 
+    # Get today's date
     today = django_timezone.localdate().isoformat()
 
+    # Find today's active deals
     deals = deals_collection.find({
-        "status": "Active",
-        "is_deleted": {"$ne": True},
+        "status": True,
+        "is_deleted": False,
         "start_date": {"$lte": today},
         "end_date": {"$gte": today}
     }).sort("created_at", -1)
 
-    result = [
-        serialize_deal(deal)
-        for deal in deals
-    ]
+    # Convert MongoDB documents into JSON
+    result = []
+
+    for deal in deals:
+
+        result.append({
+            "deal_id": str(deal["_id"]),
+            "product_id": deal.get("product_id", ""),
+            "product_name": deal.get("product_name", ""),
+            "original_price": deal.get("original_price", 0),
+            "offer_price": deal.get("offer_price", 0),
+            "discount_percentage": deal.get("discount_percentage", 0),
+            "offer_title": deal.get("offer_title", ""),
+            "start_date": deal.get("start_date", ""),
+            "end_date": deal.get("end_date", ""),
+            "status": deal.get("status", False),
+            "image": deal.get("image", ""),
+            "created_at": (
+                deal["created_at"].isoformat()
+                if deal.get("created_at") else None
+            )
+        })
 
     return Response({
         "message": "Today's active deals fetched successfully",
@@ -122,11 +157,6 @@ def get_today_deals(request):
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_deal(request, deal_id):
-
-    if not check_admin(request):
-        return Response({
-            "message": "Admin access required"
-        }, status=403)
 
     if not ObjectId.is_valid(deal_id):
         return Response({

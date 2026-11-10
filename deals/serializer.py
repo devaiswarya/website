@@ -32,6 +32,8 @@ class DealSerializer(serializers.Serializer):
         default=True
     )
 
+    image = serializers.ImageField(required=True)
+
     def validate_offer_price(self, value):
 
         if value <= 0:
