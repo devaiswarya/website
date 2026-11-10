@@ -349,9 +349,67 @@ def create_product(request):
         status=status.HTTP_201_CREATED
     )
 
+# @api_view(["GET"])
+# def get_new_arrivals(request):
+
+#     try:
+#         new_arrivals = list(
+#             products_collection.find({
+#                 "is_deleted": {"$ne": True},
+#                 "status": "Active"
+#             })
+#             .sort("created_at", -1)
+#             .limit(10)
+#         )
+
+#         products = []
+
+#         for product in new_arrivals:
+
+#             products.append({
+#                 "product_id": str(product["_id"]),
+#                 "custom_product_id": product.get("product_id"),
+#                 "product_name": product.get("product_name"),
+#                 "category_id": product.get("category_id"),
+#                 "category_name": product.get("category_name"),
+#                 "unit_price": product.get("unit_price"),
+#                 "initial_stock_level": product.get(
+#                     "initial_stock_level", 0
+#                 ),
+#                 "stock": product.get("stock", 0),
+#                 "stock_status": product.get("stock_status"),
+#                 "short_description": product.get(
+#                     "short_description"
+#                 ),
+#                 "images": product.get("images", {}),
+#                 "variants": product.get("variants", []),
+#                 "status": product.get("status"),
+#                 "created_at": product.get("created_at")
+#             })
+
+#         return Response(
+#             {
+#                 "message": "New arrivals fetched successfully",
+#                 "total": len(products),
+#                 "products": products
+#             },
+#             status=status.HTTP_200_OK
+#         )
+
+#     except Exception as e:
+
+#         return Response(
+#             {
+#                 "message": "Failed to fetch new arrivals",
+#                 "error": str(e)
+#             },
+#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#         )
+
+
+
 @api_view(["GET"])
 def get_new_arrivals(request):
-
     try:
         new_arrivals = list(
             products_collection.find({
@@ -370,38 +428,42 @@ def get_new_arrivals(request):
                 "product_id": str(product["_id"]),
                 "custom_product_id": product.get("product_id"),
                 "product_name": product.get("product_name"),
+
                 "category_id": product.get("category_id"),
                 "category_name": product.get("category_name"),
+
                 "unit_price": product.get("unit_price"),
+
                 "initial_stock_level": product.get(
                     "initial_stock_level", 0
                 ),
+
                 "stock": product.get("stock", 0),
                 "stock_status": product.get("stock_status"),
+
                 "short_description": product.get(
                     "short_description"
                 ),
-                "images": product.get("images", {}),
+
+                # Image fields
+                "image_1": product.get("image_1"),
+                "image_2": product.get("image_2"),
+                "image_3": product.get("image_3"),
+                "image_4": product.get("image_4"),
+
                 "variants": product.get("variants", []),
                 "status": product.get("status"),
                 "created_at": product.get("created_at")
             })
 
-        return Response(
-            {
-                "message": "New arrivals fetched successfully",
-                "total": len(products),
-                "products": products
-            },
-            status=status.HTTP_200_OK
-        )
+        return Response({
+            "message": "New arrivals fetched successfully",
+            "total": len(products),
+            "products": products
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
-
-        return Response(
-            {
-                "message": "Failed to fetch new arrivals",
-                "error": str(e)
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({
+            "message": "Failed to fetch new arrivals",
+            "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

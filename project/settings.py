@@ -35,6 +35,11 @@ ALLOWED_HOSTS = [
     "website-rlht.onrender.com",
 ]
 
+MEDIA_BASE_URL = os.getenv(
+    "MEDIA_BASE_URL",
+    "http://127.0.0.1:8000"
+)
+
 load_dotenv(BASE_DIR / ".env")
 
 
@@ -50,6 +55,7 @@ INSTALLED_APPS = [
     'category',
     'product',
     'contact',
+    'deals',
     'rest_framework',
      "corsheaders",
 ]
