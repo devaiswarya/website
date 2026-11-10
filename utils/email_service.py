@@ -52,7 +52,7 @@ def send_contact_email(name, email, phone, subject, message):
 
     params = {
         "from": "ALO Website <onboarding@resend.dev>",
-        "to": ["your-email@gmail.com"],
+        "to": ["joshibaaloschool@gmail.com"],
         "subject": subject,
 
         "html": f"""

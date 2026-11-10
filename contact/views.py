@@ -348,7 +348,7 @@ def create_contact(request):
     try:
         resend.Emails.send({
             "from": "Your Name <onboarding@resend.dev>",
-            "to": ["your-email@gmail.com"],
+            "to": ["joshibaaloschool@gmail.com"],
             "subject": "New Contact Enquiry",
             "html": f"""
                 <h2>New Contact Enquiry</h2>
@@ -365,7 +365,7 @@ def create_contact(request):
         return Response(
             {
                 "message": "Contact details saved, but email sending failed",
-                "contact_id": str(contact.id),
+                "contact_id": str(contact["_id"]),
                 "email_error": email_error
             },
             status=201
@@ -374,7 +374,7 @@ def create_contact(request):
     return Response(
         {
             "message": "Contact created and email sent successfully",
-            "contact_id": str(contact.id)
+            "contact_id": str(contact["_id"])
         },
         status=201
     )
