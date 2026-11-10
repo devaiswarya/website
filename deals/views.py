@@ -93,13 +93,14 @@ def create_deal(request):
 
 
 
+
 @api_view(["GET"])
 def get_today_deals(request):
 
     today = django_timezone.localdate().isoformat()
 
     deals = deals_collection.find({
-        "status": True,
+        "status": "Active",
         "is_deleted": {"$ne": True},
         "start_date": {"$lte": today},
         "end_date": {"$gte": today}
@@ -116,7 +117,6 @@ def get_today_deals(request):
         "count": len(result),
         "deals": result
     }, status=200)
-
 
 
 @api_view(["PUT"])
