@@ -85,7 +85,9 @@ def send_contact_email(name, email, phone, subject, message):
     params = {
         "from": f"ALO Website <{settings.DEFAULT_FROM_EMAIL}>",
 
-        "to": [settings.CONTACT_RECEIVER_EMAIL],
+        # "to": [settings.CONTACT_RECEIVER_EMAIL],
+
+        "to": ["aiswaryabalu88@gmail.com"],
 
         "subject": f"New Contact Enquiry: {subject}",
 
