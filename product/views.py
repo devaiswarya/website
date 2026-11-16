@@ -419,7 +419,7 @@ def get_products(request):
         product_type = request.query_params.get("product_type")
 
         if product_type:
-            if product_type not in ["product", "Spare Part"]:
+            if product_type not in ["Product", "Spare Part"]:
                 return Response({
                     "success": False,
                     "message": "Invalid product type"
