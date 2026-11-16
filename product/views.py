@@ -20,6 +20,7 @@ products_collection = db["products"]
 @api_view(["POST"])
 @parser_classes([JSONParser])
 def create_product(request):
+
     serializer = ProductSerializer(data=request.data)
 
     if not serializer.is_valid():
@@ -30,13 +31,16 @@ def create_product(request):
 
     data = serializer.validated_data
 
+    # Basic product details
     product_id = data["product_id"]
     product_name = data["product_name"]
+    product_type = data["product_type"]
     category_id = data["category_id"]
 
     primary_category_id = (
         data.get("primary_category_id") or None
     )
+
     secondary_category_id = (
         data.get("secondary_category_id") or None
     )
@@ -45,14 +49,17 @@ def create_product(request):
     initial_stock_level = data["initial_stock_level"]
     short_description = data["short_description"]
 
+    # Product images
     image_1 = data["image_1"]
     image_2 = data.get("image_2") or None
     image_3 = data.get("image_3") or None
     image_4 = data.get("image_4") or None
 
+    # Variants and status
     variants = data.get("variants", [])
     product_status = data.get("status", "Active")
 
+    # Validate variants
     if not isinstance(variants, list):
         return Response(
             {"message": "Variants must be a list"},
@@ -106,6 +113,7 @@ def create_product(request):
             if isinstance(variant_stock, float):
                 if not math.isfinite(variant_stock):
                     raise ValueError
+
                 if not variant_stock.is_integer():
                     raise ValueError
 
@@ -135,6 +143,7 @@ def create_product(request):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         if variant_stock < 0:
             return Response(
                 {
@@ -145,13 +154,16 @@ def create_product(request):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         product_variants.append({
-            # "variant_id": str(uuid4()),
             "variant_name": variant_name.strip(),
             "price": variant_price,
             "stock": variant_stock
         })
+
         total_variant_stock += variant_stock
+
+    # Validate total variant stock
     if (
         product_variants
         and total_variant_stock != initial_stock_level
@@ -167,80 +179,82 @@ def create_product(request):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    # Validate main category
     try:
         category_object_id = ObjectId(category_id)
+
         product_category = categories_collection.find_one({
-            "_id": category_object_id,
-            # "is_deleted": {"$ne": True}
+            "_id": category_object_id
         })
+
     except (InvalidId, TypeError):
         return Response(
             {"message": "Invalid category ID"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
     if not product_category:
         return Response(
             {"message": "Category not found"},
             status=status.HTTP_404_NOT_FOUND
         )
 
-# //
-
-    print("Database Name:", categories_collection.database.name)
-    print("Collection Name:", categories_collection.name)
-
-    print("Received Category ID:", category_id)
-
-    category_object_id = ObjectId(category_id)
-
-    print("Converted Category ID:", category_object_id)
-
-    print("Total Categories:", categories_collection.count_documents({}))
-
-    product_category = categories_collection.find_one({
-    "_id": category_object_id
-})
-
-    print("Category Result:", product_category)
-
+    # Validate primary category
     primary_category = None
+    primary_object_id = None
+
     if primary_category_id:
+
         try:
             primary_object_id = ObjectId(primary_category_id)
+
             primary_category = categories_collection.find_one({
                 "_id": primary_object_id,
                 "is_deleted": {"$ne": True}
             })
+
         except (InvalidId, TypeError):
             return Response(
                 {"message": "Invalid primary category ID"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         if not primary_category:
             return Response(
                 {"message": "Primary category not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+    # Validate secondary category
     secondary_category = None
+    secondary_object_id = None
+
     if secondary_category_id:
+
         try:
             secondary_object_id = ObjectId(
                 secondary_category_id
             )
+
             secondary_category = categories_collection.find_one({
                 "_id": secondary_object_id,
                 "is_deleted": {"$ne": True}
             })
+
         except (InvalidId, TypeError):
             return Response(
                 {"message": "Invalid secondary category ID"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         if not secondary_category:
             return Response(
                 {"message": "Secondary category not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+    # Check category status
     category_inactive = (
         product_category.get("status") == "Inactive"
         or (
@@ -252,89 +266,133 @@ def create_product(request):
             and secondary_category.get("status") == "Inactive"
         )
     )
+
     if category_inactive:
         product_status = "Inactive"
+
+    # Calculate stock status
     if initial_stock_level == 0:
         stock_status = "Out of Stock"
+
     elif initial_stock_level <= 5:
         stock_status = "Low Stock"
+
     else:
         stock_status = "In Stock"
+
+    # Prepare images
     images = {
         "image_1": str(image_1),
         "image_2": str(image_2) if image_2 else None,
         "image_3": str(image_3) if image_3 else None,
         "image_4": str(image_4) if image_4 else None
     }
+
+    # Prepare MongoDB product document
     product = {
+
         "product_id": product_id,
         "product_name": product_name,
+
+        # NEW FIELD
+        "product_type": product_type,
+
         "category_id": str(category_object_id),
         "category_name": product_category.get("name"),
+
         "primary_category_id": (
             str(primary_object_id)
             if primary_category is not None
             else None
         ),
+
         "primary_category_name": (
             primary_category.get("name")
             if primary_category is not None
             else None
         ),
+
         "secondary_category_id": (
             str(secondary_object_id)
             if secondary_category is not None
             else None
         ),
+
         "secondary_category_name": (
             secondary_category.get("name")
             if secondary_category is not None
             else None
         ),
+
         "unit_price": float(unit_price),
+
         "initial_stock_level": initial_stock_level,
         "stock": initial_stock_level,
+
         "status": product_status,
         "stock_status": stock_status,
+
         "short_description": short_description,
+
         "images": images,
         "variants": product_variants,
+
         "is_deleted": False,
+
         "created_at": datetime.now(timezone.utc)
     }
+
+    # Insert into MongoDB
     result = products_collection.insert_one(product)
-    product_id = result.inserted_id
+
+    mongo_product_id = result.inserted_id
+
+    # Success response
     return Response(
         {
             "message": "Product created successfully",
+
             "product": {
-                "product_id": str(product_id),
+
+                "product_id": str(mongo_product_id),
+
                 "product_name": product_name,
+
+                # NEW FIELD
+                "product_type": product_type,
+
                 "category_id": str(category_object_id),
                 "category_name": product_category.get("name"),
+
                 "primary_category_id": (
                     str(primary_object_id)
                     if primary_category is not None
                     else None
                 ),
+
                 "primary_category_name": (
                     primary_category.get("name")
                     if primary_category is not None
                     else None
                 ),
+
                 "secondary_category_id": (
                     str(secondary_object_id)
                     if secondary_category is not None
                     else None
                 ),
+
                 "secondary_category_name": (
                     secondary_category.get("name")
                     if secondary_category is not None
                     else None
                 ),
+
                 "unit_price": float(unit_price),
+
                 "initial_stock_level": initial_stock_level,
                 "stock": initial_stock_level,
+
                 "status": product_status,
                 "stock_status": stock_status,
 
@@ -348,6 +406,7 @@ def create_product(request):
         },
         status=status.HTTP_201_CREATED
     )
+
 
 @api_view(["GET"])
 def get_new_arrivals(request):
