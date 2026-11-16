@@ -405,3 +405,66 @@ def get_new_arrivals(request):
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+@api_view(["GET"])
+def get_products(request):
+
+    try:
+        # Base query: exclude deleted products
+        query = {
+            "is_deleted": False
+        }
+
+        # Filter by product type
+        product_type = request.query_params.get("product_type")
+
+        if product_type:
+            if product_type not in ["Product", "Spare Part"]:
+                return Response({
+                    "success": False,
+                    "message": "Invalid product type"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            query["product_type"] = product_type
+
+        # Filter by category
+        category_id = request.query_params.get("category_id")
+
+        if category_id:
+            query["category_id"] = category_id
+
+        # Filter by status
+        product_status = request.query_params.get("status")
+
+        if product_status:
+            if product_status not in ["Active", "Inactive"]:
+                return Response({
+                    "success": False,
+                    "message": "Invalid status"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            query["status"] = product_status
+
+        # Fetch products from MongoDB
+        products = list(
+            products_collection.find(query)
+        )
+
+        # Convert ObjectId into string
+        for product in products:
+            product["_id"] = str(product["_id"])
+
+        return Response({
+            "success": True,
+            "message": "Products fetched successfully",
+            "count": len(products),
+            "data": products
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+
+        return Response({
+            "success": False,
+            "message": "Failed to fetch products",
+            "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

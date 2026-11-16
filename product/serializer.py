@@ -7,15 +7,20 @@ HTTP_URL_VALIDATOR = URLValidator(
 
 
 class ProductSerializer(serializers.Serializer):
-    product_name = serializers.CharField(
+
+    product_name = serializers.CharField(required=True)
+
+    product_type = serializers.ChoiceField(
+        choices=["Product", "Spare Part"],
         required=True
     )
+
     product_id = serializers.CharField(
-    required=True,  max_length=200
-)
-    category_id = serializers.CharField(
-        required=True
+        required=True,
+        max_length=200
     )
+
+    category_id = serializers.CharField(required=True)
 
     primary_category_id = serializers.CharField(
         required=False,
@@ -40,9 +45,7 @@ class ProductSerializer(serializers.Serializer):
         min_value=0
     )
 
-    short_description = serializers.CharField(
-        required=True
-    )
+    short_description = serializers.CharField(required=True)
 
     image_1 = serializers.URLField(
         required=True,
@@ -62,14 +65,12 @@ class ProductSerializer(serializers.Serializer):
     )
 
     image_4 = serializers.URLField(
-            required=False,
-            allow_null=True,
-            validators=[HTTP_URL_VALIDATOR]
-        )
-
-    variants = serializers.JSONField(
-        required=False
+        required=False,
+        allow_null=True,
+        validators=[HTTP_URL_VALIDATOR]
     )
+
+    variants = serializers.JSONField(required=False)
 
     status = serializers.ChoiceField(
         choices=["Active", "Inactive"],
@@ -81,7 +82,6 @@ class ProductSerializer(serializers.Serializer):
         required=False,
         default=False
     )
-
 
 class ProductImageUpdateSerializer(serializers.Serializer):
 

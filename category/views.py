@@ -129,3 +129,22 @@ def upload_file(request):
 #             },
 #             status=status.HTTP_500_INTERNAL_SERVER_ERROR
 #         )
+
+@api_view(["GET"])
+def get_categories(request):
+    try:
+        categories = list(categories_collection.find())
+        for category in categories:
+            category["_id"] = str(category["_id"])
+        return Response({
+            "success": True,
+            "message": "Categories fetched successfully",
+            "count": len(categories),
+            "data": categories
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": "Failed to fetch categories",
+            "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
