@@ -556,3 +556,93 @@ def get_products(request):
             "message": "Failed to fetch products",
             "error": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+@api_view(["GET"])
+def global_search(request):
+
+    try:
+        # 1. Get search keyword
+        search = request.query_params.get("search", "").strip()
+
+        if not search:
+            return Response({
+                "success": False,
+                "message": "Please enter a search keyword"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Search products
+        product_query = {
+            "is_deleted": False,
+            "$or": [
+                {
+                    "product_name": {
+                        "$regex": search,
+                        "$options": "i"
+                    }
+                },
+                {
+                    "product_id": {
+                        "$regex": search,
+                        "$options": "i"
+                    }
+                }
+            ]
+        }
+
+        products = list(
+            products_collection.find(product_query)
+        )
+
+        # 3. Search categories
+        category_query = {
+            "is_deleted": False,
+            "$or": [
+                {
+                    "category_name": {
+                        "$regex": search,
+                        "$options": "i"
+                    }
+                },
+                {
+                    "category_id": {
+                        "$regex": search,
+                        "$options": "i"
+                    }
+                }
+            ]
+        }
+
+        categories = list(
+            categories_collection.find(category_query)
+        )
+
+        # 4. Convert ObjectId
+        for item in products:
+            item["_id"] = str(item["_id"])
+
+        for item in categories:
+            item["_id"] = str(item["_id"])
+
+        # 5. Return response
+        return Response({
+            "success": True,
+            "message": "Search completed successfully",
+            "search": search,
+            "product_count": len(products),
+            "category_count": len(categories),
+            "total_count": len(products) + len(categories),
+            "data": {
+                "products": products,
+                "categories": categories
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+
+        return Response({
+            "success": False,
+            "message": "Failed to search",
+            "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
