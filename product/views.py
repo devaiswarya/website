@@ -646,3 +646,100 @@ def global_search(request):
             "message": "Failed to search",
             "error": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+@api_view(["GET"])
+def product_detail(request, product_id):
+
+    try:
+
+        # Fetch product
+        product = products_collection.find_one({
+            "product_id": product_id,
+            "is_deleted": False
+        })
+
+        if not product:
+            return Response({
+                "status": False,
+                "message": "Product not found"
+            }, status=404)
+
+        # Fetch images from nested object
+        images = product.get("images", {})
+
+        if not isinstance(images, dict):
+            images = {}
+
+        # Product response
+        response_data = {
+
+            "product_id": product.get("product_id"),
+
+            "product_name": product.get("product_name"),
+
+            "product_type": product.get("product_type"),
+
+            # Category details
+            "category_id": product.get("category_id"),
+
+            "category_name": product.get("category_name"),
+
+            # Primary category
+            "primary_category_id": product.get("primary_category_id"),
+
+            "primary_category_name": product.get("primary_category_name"),
+
+            # Secondary category
+            "secondary_category_id": product.get("secondary_category_id"),
+
+            "secondary_category_name": product.get("secondary_category_name"),
+
+            # Product information
+            "unit_price": product.get("unit_price"),
+
+            "initial_stock_level": product.get("initial_stock_level"),
+
+            "stock": product.get("stock"),
+
+            "stock_status": product.get("stock_status"),
+
+            "short_description": product.get("short_description"),
+
+            # Product images
+            "image_1": images.get("image_1"),
+
+            "image_2": images.get("image_2"),
+
+            "image_3": images.get("image_3"),
+
+            "image_4": images.get("image_4"),
+
+            # Variants
+            "variants": product.get("variants", []),
+
+            # Status
+            "status": product.get("status"),
+
+            "is_deleted": product.get("is_deleted", False),
+
+            # Dates
+            "created_at": str(product.get("created_at", "")),
+
+            "updated_at": str(product.get("updated_at", ""))
+        }
+
+        return Response({
+            "status": True,
+            "message": "Product details fetched successfully",
+            "data": response_data
+        }, status=200)
+
+    except Exception as e:
+
+        return Response({
+            "status": False,
+            "message": "Something went wrong",
+            "error": str(e)
+        }, status=500)
