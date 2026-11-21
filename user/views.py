@@ -25,6 +25,7 @@ def register_api(request):
         )
 
     # Step 2: Get user details
+    name = serializer.validated_data['name']
     email = serializer.validated_data['email'].lower()
     password = serializer.validated_data['password']
 
@@ -43,6 +44,7 @@ def register_api(request):
 
     # Step 5: Create user document
     user_data = {
+        "name": name,
         "email": email,
         "password": hashed_password,
         "created_at": datetime.now(timezone.utc)
@@ -56,10 +58,10 @@ def register_api(request):
         "message": "Registration successful",
         "user": {
             "id": str(result.inserted_id),
+            "name": name,
             "email": email
         }
     }, status=status.HTTP_201_CREATED)
-
 
 @api_view(['POST'])
 # @permission_classes([AllowAny])
