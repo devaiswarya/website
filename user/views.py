@@ -1,14 +1,16 @@
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.hashers import check_password
-from .serializer import LoginSerializer,RegisterSerializer
+
+from django.contrib.auth.hashers import check_password, make_password
+
+from .serializer import LoginSerializer, RegisterSerializer
 from project.mongodb import users_collection
-from django.contrib.auth.hashers import make_password
-from datetime import datetime, timezone,timedelta
+
+from datetime import datetime, timezone, timedelta
 
 
 @api_view(['POST'])
