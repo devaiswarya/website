@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'product',
     'contact',
     'deals',
+    'cart',
     'rest_framework',
      "corsheaders",
 ]
