@@ -26,6 +26,7 @@ urlpatterns = [
     path('contact/',include('contact.urls')),
     path('deals/',include('deals.urls')),
     path('cart/',include('cart.urls')),
+    path('api/',include('user.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(
